@@ -1,0 +1,281 @@
+<template>
+    <lightning-card title="Account Details using dataTable" icon-name="standard:contact" ><br/>
+        <h3 slot="title">
+            <lightning-icon  icon-name="standard:contact"  size="large"></lightning-icon> Custom Search Functionality on Account Object in LWC.          
+        </h3>
+        
+         <!--display card with account details-->
+         <template for:each={dataList} for:item=accitem>
+            <div class="card1"  key={accitem.Id} style="width:265px;height:230px;">
+              <div class="container">
+                  <p>
+                      <img src={accitem.Industry_Image__c} class="cstm-img" alt="image" style="width:100%;height:120px;"/>
+                  </p>
+                  <p><strong>Account :</strong><a href="#" onclick={handleclickcard} data-accountid={accitem.Id}>{accitem.Name}</a></p>
+                  <p><strong>Industry :</strong>{accitem.Industry}</p>
+                  <p><strong>Phone :</strong>{accitem.Phone}</p>
+                  <p><strong>Website :</strong>{accitem.Website}</p>
+                  <lightning-button variant="destructive"  label="Delete"  onclick={handleDeleteCard} data-recordid={accitem.Id} style="margin: left 50px;"></lightning-button>
+              </div> 
+        </div>
+      </template>
+       <!--close card-->
+        <p class="slds-p-horizontal_small">
+          <lightning-input  type="search" class="slds-m-bottom_small" placeholder="please enter account name" label="Search Account Name" onchange={searchAccountAction} value={accountName}></lightning-input>
+        </p> 
+          
+           <!--<div class="slds-p-around_medium">
+            <lightning-file-upload
+            label="upload the file"
+            name="fileUploader"
+            accept={acceptedFileItem}
+            record-id={myRecordId}
+            onuploadfinished={uploadFiledAction}></lightning-file-upload>
+           </div>-->
+
+       <div>
+        
+         <span><p style="margin-left: 90%; margin-bottom:-10px;">TotalRecords: <b style="color:red;">{totalRecord}</b></p></span>
+         </div>&nbsp;&nbsp;
+       <div>
+        <span><p style="margin-left: 90%;">Selected Records: <b style="color:red;">{recordsCount}</b></p></span>
+      </div>
+      
+       <lightning-button label={buttonLabel}
+       icon-name="utility:delete"
+       disabled={isTrue}
+       variant="destructive" 
+       onclick={handleDelete}>
+       </lightning-button>
+
+       <lightning-button variant="brand"
+         label="custom modal Add Account"
+        title="Open Modal"
+        onclick={customShowModalPopup}
+        class="slds-m-left_x-small"></lightning-button>&nbsp;&nbsp;
+
+       <div style="display: inline;">
+       <lightning-button variant="brand" label="New Account" onclick={navigateToNewAccountPage}></lightning-button>
+      </div>
+      
+      <lightning-button  variant="brand" onclick={generateData} label="Generate PDF" style="color:blue;width:200px; margin-left:17%;margin-top:-50px;"></lightning-button>&nbsp;
+      <lightning-button  variant ="brand" label="Download Excel" download="ExportToCSV.csv" href={hrefdata} onclick={exportAccountData}></lightning-button>
+     
+      <lightning-combobox name="filter" label="Status" 
+         value={selectedValue}
+         variant="label-hidden"
+         options={options}
+         onchange={handleChange}
+         placeholder="Choose Records"
+         style="color:blue;width:200px; margin-left:37%;margin-top:-32px;">
+        </lightning-combobox>&nbsp;&nbsp;
+
+       <lightning-combobox name="optionSelect"
+                label="Status"
+                value={selectedValues}
+                variant="label-hidden"
+                options={options2}
+                onchange={handleChanges}
+                placeholder="Select Industry to filter" style="color:red;width:200px; margin-left:68%;margin-top:-49px;">
+            </lightning-combobox>&nbsp;&nbsp;
+           <!-- Spinner -->
+        <div if:true={showLoadingSpinner}>
+            <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+       </div>
+       
+           <div style="height:250px;">
+            <lightning-datatable 
+                key-field="Id"
+                data={dataList}
+                columns={columns}
+                onrowselection={getSelectedId}
+                sorted-by={sortBy}
+                sorted-direction={sortDirection}
+                onsort={handleSortdata}
+                onrowaction={handleEdit}
+                onsave={handleSave}
+                draft-values={draftValues}
+                onselect={handleRowActionss}
+                onrowselections={handleRowActions} 
+                draggable="true">
+            </lightning-datatable>
+                
+            </div>
+
+         <lightning-layout horizontal-align="space">
+            <lightning-layout-item flexibility="auto">
+                <lightning-button label="Previous" icon-name="utility:chevronleft" onclick={previousHandler}></lightning-button>
+            </lightning-layout-item>
+
+            <lightning-layout-item flexibility="auto">Page {page} of {totalPage}</lightning-layout-item>
+            <lightning-layout-item flexibility="auto">
+                <lightning-button label="Next" icon-name="utility:chevronright" icon-position="right"
+                    onclick={nextHandler}></lightning-button>
+            </lightning-layout-item>
+        </lightning-layout>
+
+    <template if:true={showDetails}> 
+      <lightning-card>
+             <h3 slot="title">
+                 <lightning-icon icon-name="standard:account" alternative-text="Event" size="large"></lightning-icon>
+                 Insert multiple account:
+             </h3>
+             <div slot="footer">
+                 <lightning-button label="Add" variant="brand" onclick={addRow}></lightning-button>&nbsp;
+                 <lightning-button label="Save" variant="brand" onclick={saveMultipleAccount}></lightning-button>
+             </div>
+         
+             <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                <thead>
+                    <tr class="slds-text-title_caps">
+                        <th scope="col">
+                            <div class="slds-truncate" title="S.No">S.NO</div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate" title="Account Name">Account Name</div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate" title="Account Industry">Account Industry</div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate" title="Account Phone">Account Phone</div>
+                        </th>
+                        <th scope="col">
+                            <div class="slds-truncate" title="Action">Action</div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+            <template for:each={accountRecList} for:item="account" for:index="index">
+    
+               <tr key={keyIndex}>
+                            <td>{index}</td>
+                            <td>
+                                <lightning-input name='accName' access-key={index} id={index} type='text' onchange={changeHandler}  value={account.Name}>
+                                </lightning-input>
+                            </td>
+                            <td>
+                                <lightning-input name='accIndustry' access-key={index} id={index} type='text' onchange={changeHandler}   value={account.Industry}>
+                                </lightning-input>
+                            </td>
+                            <td>
+                                <lightning-input name='accPhone' access-key={index} type='Phone' id={index}  onchange={changeHandler} value={account.Phone}></lightning-input>
+                            </td>
+                            <td>
+                                <lightning-icon icon-name="action:delete"  access-key={index} id={index} alternative-text="Click to Call" size="small" title="large size" onclick={removeRow}>
+                                </lightning-icon>   
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>      
+      </lightning-card>
+   </template> 
+  <!-- hide show button close tag-->
+  <lightning-button  icon-name="utility:chevronright" icon-position="right" label={actionButtonLabel}  onclick={handleChangesshow}></lightning-button>      
+</lightning-card>
+
+ <template if:true={isModalOpen} >
+   <c-account-edit-modal acc-id={modalAccountId} onclosemodal={handleModalClose}></c-account-edit-modal>
+</template>
+  <!--<template if:true={isModalOpen} >
+    <c-opportunity-list account-id={accountidfrmparent} onclosemodal={handleModalClose}></c-opportunity-list>
+ </template>-->
+
+   <!-- modal start -->        
+   <template if:true={customFormModal}>
+    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+    <div class="slds-modal__container">
+        <!-- modal header start -->
+        <header class="slds-modal__header">
+            <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={customHideModalPopup}>
+                <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse" size="small"></lightning-icon>
+                <span class="slds-assistive-text">Close</span>
+            </button>
+            <h2 class="slds-text-heading_medium slds-hyphenate">Adding New Account</h2>
+        </header>
+        <!-- modal body start -->
+        <div class="slds-modal__content slds-p-around_medium">
+        <div class="slds-grid slds-wrap">
+            <div class="slds-col slds-size_6-of-12 slds-p-horizontal--medium slds-m-bottom_medium">
+                <lightning-input field-name="Account Name" required label="Account Name" value={getAccountRecord.Name} onchange={nameInpChange}></lightning-input>
+            </div>
+             <div class="slds-col slds-size_6-of-12 slds-p-horizontal--medium slds-m-bottom_medium">
+                <lightning-input field-name="Phone" required label="Phone" value={getAccountRecord.Phone} onchange={phoneInpChange} ></lightning-input>
+            </div>
+            <div class="slds-col slds-size_6-of-12 slds-p-horizontal--medium slds-m-bottom_medium">
+                <lightning-input field-name="Industry" required label="industry" value={getAccountRecord.Industry} onchange={industryInpChange}></lightning-input>
+            </div>
+            <div class="slds-col slds-size_6-of-12 slds-p-horizontal--medium slds-m-bottom_medium">
+                <lightning-input field-name="Website" required label="Website" value={getAccountRecord.Website} onchange={websiteInpChange} ></lightning-input>
+            </div>
+            <div class="slds-col slds-size_6-of-12 slds-p-horizontal--medium slds-m-bottom_medium">
+                <lightning-input field-name="AnnualRevenue" required label="AnnualRevenue" value={getAccountRecord.AnnualRevenue} onchange={annualRevenueInpChange} ></lightning-input>
+            </div>
+            
+    </div>
+    <!-- modal footer start-->
+        <footer class="slds-modal__footer">
+            <button class="slds-button slds-button--destructive" onclick={customHideModalPopup}>Cancel</button>
+            <button class="slds-button slds-button_brand"  onclick={saveAccountAction}  onchange={validateFields}>Save</button>
+        </footer>
+    </div>
+    </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    <!-- modal end --> 
+
+   <!--show details-->
+    <template if:true={modalContainer}>
+        <section  class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container" style="width:400px;">
+                <h1>Account info</h1>
+                 <div class="slds-modal__content slds-p-around_medium">
+                    
+                   <div class="card" style="width:370px;height:215px;">
+                         <div>
+                            <img src={accountRow.Industry_Image__c} class="cstm-img" alt="image" style="width:50%;border-radius: 50%;"/>
+                        </div>
+                        <div class="container">
+                            <p><strong>Account Name:</strong> {accountRow.Name}</p>
+                            <p><strong>Industry:</strong> {accountRow.Industry}</p>
+                            <p><strong>Phone:</strong> {accountRow.Phone}</p>
+                            <p><strong>Website:</strong> {accountRow.Website}</p>
+                            <p><strong>StageName:</strong> {accountRow.StageName}</p>
+                        </div>
+                    </div>
+                   
+                    <!--<div class="card" style="width:370px;height:215px;">
+                        <div>
+                            <img src={accountRow.Industry_Image__c} class="cstm-img" alt="image" style="width:50%;border-radius: 50%;"/>
+                        </div>
+                         <tr for:each={accountRow} for:item="accitem">
+                            <tr key={accitem.Id}>
+                                <p>{accitem.Name}</p>
+                                <p>{accitem.Industry}</p>
+                                <p>{accitem.Phone}</p>
+                                <p>{accitem.Website}</p>
+                                <p>{accitem.Amount}</p>
+                            </tr>
+                            
+                        </tr
+                        
+                         <div class="container">
+                            <p><strong>Opportunity Name:</strong> {accountRow.Id.Name}</p>
+                            <p><strong>StageName:</strong> {accountRow.Id.StageName}</p>
+                            <p><strong>CloseDate:</strong> {accountRow.Id.CloseDate}</p>
+                            <p><strong>Amount:</strong> {accountRow.Id.Amount}</p>
+                        </div>
+                        
+                   </div>-->
+                 </div>
+                 <footer class="slds-modal__footer">
+                    <lightning-button variant="brand" label="Close" title="Close"  onclick={closeModalAction}></lightning-button>
+               </footer> 
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+</template>
